@@ -22,6 +22,17 @@ if (isset($_GET['action'])) {
             }
             break;
 
+        case 'searchGrouped':
+            if (isset($_GET['name'])) {
+                searchGroupedByMedicine($conn, $_GET['name']);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Missing medicine name'
+                ]);
+            }
+            break;
+
         case 'addStock':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data = json_decode(file_get_contents("php://input"), true);

@@ -64,4 +64,54 @@ function addStock($conn,$userId, $medicineId, $quantity, $price, $expirationDate
 
     return ['success' => false, 'message' => $conn->error];
 }
+function getStockGroupedByMedicine($conn, $name)
+{
+    $sql = "
+        SELECT 
+            m.id AS medicine_id,
+            m.name AS medicine_name,
+            m.dosage,
+            l.village,
+            l.district,
+            l.governorate,
+            l.address,
+            u.name AS provider_name
+        FROM medicines m
+        JOIN stock s ON m.id = s.medicine_id
+        JOIN stock_locations sl ON s.id = sl.stock_id
+        JOIN locations l ON sl.location_id = l.id
+        JOIN users u ON s.user_id = u.id
+        WHERE m.name LIKE ?
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $search = "%$name%";
+    $stmt->bind_param("s", $search);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $grouped = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $key = $row['medicine_name'] . ' ' . $row['dosage'];
+
+        if (!isset($grouped[$key])) {
+            $grouped[$key] = [
+                'name' => $row['medicine_name'],
+                'dosage' => $row['dosage'],
+                'locations' => []
+            ];
+        }
+
+        $grouped[$key]['locations'][] = [
+            'name' => $row['provider_name'],
+            'village' => $row['village'],
+            'district' => $row['district'],
+            'governorate' => $row['governorate'],
+            'address' => $row['address']
+        ];
+    }
+
+    return array_values($grouped);
+}
 ?>
