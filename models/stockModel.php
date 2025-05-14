@@ -64,7 +64,7 @@ function addStock($conn,$userId, $medicineId, $quantity, $price, $expirationDate
 
     return ['success' => false, 'message' => $conn->error];
 }
-function getStockGroupedByMedicine($conn, $name)
+function getStockGroupedByMedicine($conn, $name, $governorate = '', $district = '')
 {
     $sql = "
         SELECT 
@@ -84,9 +84,29 @@ function getStockGroupedByMedicine($conn, $name)
         WHERE m.name LIKE ?
     ";
 
+    if ($governorate) {
+        $sql .= " AND l.governorate LIKE ?";
+    }
+    if ($district) {
+        $sql .= " AND l.district LIKE ?";
+    }
+
     $stmt = $conn->prepare($sql);
     $search = "%$name%";
-    $stmt->bind_param("s", $search);
+    $types = 's';
+    $params = [$search];
+
+    if ($governorate) {
+        $types .= 's';
+        $params[] = "%$governorate%";
+    }
+    if ($district) {
+        $types .= 's';
+        $params[] = "%$district%";
+    }
+
+    $stmt->bind_param($types, ...$params);
+
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -114,4 +134,6 @@ function getStockGroupedByMedicine($conn, $name)
 
     return array_values($grouped);
 }
+
+
 ?>

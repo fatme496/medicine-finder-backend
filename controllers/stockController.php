@@ -46,9 +46,9 @@ function createStock($conn,$data) {
         echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
     }
 }
-function searchGroupedByMedicine($conn, $name)
+function searchGroupedByMedicine($conn, $name, $governorate, $district)
 {
-    $results = getStockGroupedByMedicine($conn, $name);
+    $results = getStockGroupedByMedicine($conn, $name, $governorate, $district);
 
     echo json_encode([
         'success' => true,
