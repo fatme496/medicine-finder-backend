@@ -1,5 +1,8 @@
 <?php
 require_once '../models/userModel.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Firebase\JWT\JWT;
 
 function createUser($conn, $data) {
     // Extract fields
@@ -49,6 +52,69 @@ function createUser($conn, $data) {
     }
 }
 
+function handleLogin($conn, $secret_key) {
+    // Headers
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: http://127.0.0.1:5500');
+    header('Access-Control-Allow-Methods: POST');
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Headers: Content-Type');
+
+    // Read input
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    if (!isset($data['email'], $data['password'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Email and password are required']);
+        return;
+    }
+
+    $email = $data['email'];
+    $password = $data['password'];
+
+    // Model
+    $user = findUserByEmail($conn, $email);
+
+    if (!$user) {
+        http_response_code(400);
+        echo json_encode(['error' => 'This user does not exist']);
+        return;
+    }
+
+    if (!password_verify($password, $user['password'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Incorrect password']);
+        return;
+    }
+
+    // Token
+    $payload = [
+        'id' => $user['id'],
+        'role' => $user['role'],
+        'iat' => time(),
+        'exp' => time() + 3600
+    ];
+    $token = JWT::encode($payload, $secret_key, 'HS256');
+
+    // Cookie
+    $isLocalhost = $_SERVER['SERVER_NAME'] === 'localhost';
+    $isRender = getenv('RENDER') === 'true';
+    $isVercel = getenv('VERCEL') === '1';
+
+    $sameSite = ($isRender || $isVercel) ? 'None' : 'Lax';
+    $secure = ($isRender || $isVercel);
+
+    setcookie("token", $token, [
+        'expires' => time() + 3600,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => $sameSite
+    ]);
+
+    echo json_encode(['message' => 'Login successful', 'token' => $token]);
+}
 
 function readAllUsers($conn) {
     $users = getAllUsers($conn);
