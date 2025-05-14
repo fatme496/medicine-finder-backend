@@ -16,6 +16,13 @@ function addUser($conn,$name, $email, $password, $role, $phone)
     }
 }
 
+function findUserByEmail($conn, $email) {
+    $stmt = $conn->prepare("SELECT id, email, password, role FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
 function getAllUsers($conn)
 {
 
