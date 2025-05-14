@@ -20,7 +20,7 @@ if ($_SERVER["HTTP_HOST"] === "localhost") {
         if ($conn->connect_error) {
             throw new Exception("Connection failed: " . $conn->connect_error);
         }
-        // else {
+        // }else {
         //     echo "✅ Local MySQL connected successfully!";
         // }
 

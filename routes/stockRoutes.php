@@ -24,7 +24,11 @@ if (isset($_GET['action'])) {
 
         case 'searchGrouped':
             if (isset($_GET['name'])) {
-                searchGroupedByMedicine($conn, $_GET['name']);
+                $name = $_GET['name'];
+                $governorate = $_GET['governorate'] ?? '';
+                $district = $_GET['district'] ?? '';
+
+                searchGroupedByMedicine($conn, $name, $governorate, $district);
             } else {
                 echo json_encode([
                     'status' => 'error',
